@@ -1,40 +1,61 @@
 {
-    "name": "yeganehha/digikala-seller-open-api",
-    "description": "Unofficial, specification-driven PHP SDK for the Digikala Marketplace Open API with configurable webhook handling.",
-    "type": "library",
-    "license": "MIT",
-    "keywords": ["digikala", "marketplace", "sdk", "openapi", "webhook"],
-    "authors": [{"name": "Erfan Ebrahimi","email":"me@erfanebrahimi.ir" , "website": "https://erfanebrahimi.ir"}],
-    "require": {
-        "php": "^8.3",
-        "ext-json": "*",
-        "guzzlehttp/guzzle": "^7.9",
-        "guzzlehttp/psr7": "^2.7",
-        "psr/http-message": "^2.0",
-        "symfony/yaml": "^7.4"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^12.5",
-        "friendsofphp/php-cs-fixer": "^3.65"
-    },
-    "autoload": {
-        "psr-4": {"Yeganehha\\DigikalaSellerOpenApi\\": "src/"}
-    },
-    "autoload-dev": {
-        "psr-4": {"Yeganehha\\DigikalaSellerOpenApi\\Tests\\": "tests/"}
-    },
-    "scripts": {
-        "test": "phpunit",
-        "lint": "php bin/lint.php",
-        "format": "php-cs-fixer fix",
-        "format:check": "php-cs-fixer fix --dry-run --diff",
-        "cs-check": "@format:check",
-        "api:list": "php bin/api-reference.php",
-        "api:reference": "php bin/api-reference.php --markdown",
-        "check": ["@lint", "@test", "@format:check"]
-    },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": false
+  "name": "yeganehha/digikala-seller-open-api",
+  "description": "Unofficial, specification-driven PHP SDK for the Digikala Marketplace Open API with configurable webhook handling.",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "digikala",
+    "marketplace",
+    "sdk",
+    "openapi",
+    "webhook"
+  ],
+  "authors": [
+    {
+      "name": "Erfan Ebrahimi",
+      "email": "me@erfanebrahimi.ir",
+      "homepage": "https://erfanebrahimi.ir",
+      "role": "Developer"
     }
+  ],
+  "require": {
+    "php": "^8.3",
+    "ext-json": "*",
+    "guzzlehttp/guzzle": "^7.9",
+    "guzzlehttp/psr7": "^2.7",
+    "psr/http-message": "^2.0",
+    "symfony/yaml": "^7.4"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12.5",
+    "friendsofphp/php-cs-fixer": "^3.65"
+  },
+  "autoload": {
+    "psr-4": {
+      "Yeganehha\\DigikalaSellerOpenApi\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Yeganehha\\DigikalaSellerOpenApi\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "lint": "php bin/lint.php",
+    "format": "php-cs-fixer fix",
+    "format:check": "php-cs-fixer fix --dry-run --diff",
+    "cs-check": "@format:check",
+    "api:list": "php bin/api-reference.php",
+    "api:reference": "php bin/api-reference.php --markdown",
+    "check": [
+      "@lint",
+      "@test",
+      "@format:check"
+    ]
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": false
+  }
 }
