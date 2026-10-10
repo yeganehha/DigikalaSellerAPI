@@ -10,7 +10,7 @@
 ## نصب
 
 ```bash
-composer require digikala/marketplace-api-client
+composer require yeganehha/digikala-seller-open-api
 ```
 
 این بسته هنوز در Packagist منتشر نشده است. برای توسعه‌ی محلی، مخزن را دریافت و `composer install` را اجرا کنید.

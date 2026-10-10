@@ -10,7 +10,7 @@ A typed PHP client for the Digikala Marketplace Open API. This repository curren
 ## Installation
 
 ```bash
-composer require digikala/marketplace-api-client
+composer require yeganehha/digikala-seller-open-api
 ```
 
 The package is not published yet. For local development, clone this repository and run `composer install`.
