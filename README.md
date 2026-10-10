@@ -1,6 +1,6 @@
 # Digikala Marketplace API Client
 
-A typed PHP client for the Digikala Marketplace Open API. The initial release provides the service health-check and OAuth refresh-token endpoints. The codebase is structured to add the remaining documented endpoints as separate endpoint classes with request and response DTOs.
+A typed PHP client for the Digikala Marketplace Open API. This repository currently implements health-check, refresh-token, category discovery, product search and seller-product workflows described in the attached OpenAPI excerpt. Each implemented operation has a dedicated endpoint class; request DTOs are used where the documented input schema is available. Responses with incomplete schemas remain available through `ApiResponse` without invented fields.
 
 ## Requirements
 
@@ -69,15 +69,26 @@ composer test
 ```
 
 Tests use Guzzle's mock handler and do not call the production service.
+## Category and product search
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\CategoryTreeRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\ProductSearchRequest;
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$categories = $client->categories()->get(new CategoryTreeRequest(parentId: 12));
+$products = $client->productSearch()->search(new ProductSearchRequest(keyword: 'گوشی'));
+```
+
+Use the endpoint-specific DTOs for seller-product filters, draft filters, product details, brand requests, and uploads. For file uploads, pass an opened stream and its filename to `UploadImageRequest`; the client sends multipart form data and does not set the multipart boundary manually.
+
 
 ## Current endpoint coverage
 
-| Endpoint | Method | Request DTO | Response DTO |
-| --- | --- | --- | --- |
-| `GET /open-api/v1/` | `healthCheck()->get()` | `HealthCheckRequest` | `HealthCheckResponse` |
-| `POST /open-api/v1/auth/refresh-token` | `refreshToken()->refresh()` | `RefreshTokenRequest` | `RefreshTokenResponse` → `RefreshTokenData` → `TokenExpiry` |
+The current implementation covers the operations described in the supplied excerpt for health and authentication, category discovery, product search and creation, drafts, seller products, product editing, publishing, image uploads, and brand requests. See the endpoint classes under `src/Endpoint/` and request/response DTOs under `src/Dto/` for the exact method signatures.
 
-The attached OpenAPI document lists 275 operations. Only these two endpoints are implemented in this initial increment; the rest are not yet included.
+The supplied excerpt is partial: it names 275 operations, but does not include every operation's path, schema, or response shape. This release implements only the routes explicitly described in the excerpt and does not claim full coverage of all 275 operations. Incomplete response schemas are preserved in `ApiResponse` rather than guessed.
 
 ## License
 

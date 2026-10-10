@@ -1,6 +1,6 @@
 # کتابخانه‌ی PHP برای API بازارگاه دیجی‌کالا
 
-یک کلاینت PHP تایپ‌شده برای Open API بازارگاه دیجی‌کالا. نسخه‌ی اولیه‌ی این مخزن دو endpoint بررسی سلامت سرویس و نوسازی توکن را ارائه می‌کند. ساختار پروژه برای افزودن endpointهای مستندشده به شکل کلاس‌های مستقل و همراه DTO درخواست و پاسخ آماده است.
+یک کلاینت PHP تایپ‌شده برای Open API بازارگاه دیجی‌کالا. این مخزن در حال حاضر endpoint بررسی سلامت، نوسازی توکن، کشف دسته‌بندی، جست‌وجوی محصول و گردش‌کارهای فروشنده و محصول را که در گزیده‌ی پیوست‌شده آمده‌اند پیاده‌سازی می‌کند. هر operation پیاده‌سازی‌شده کلاس endpoint مستقل دارد و هرجا schema ورودی در مستند مشخص بوده، DTO درخواست استفاده شده است. پاسخ‌هایی که schema کامل ندارند بدون حدس‌زدن فیلدها از طریق `ApiResponse` در دسترس هستند.
 
 ## پیش‌نیازها
 
@@ -58,15 +58,26 @@ composer test
 ```
 
 تست‌ها از Guzzle Mock Handler استفاده می‌کنند و به سرویس production درخواست نمی‌فرستند.
+## جست‌وجوی دسته و محصول
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\CategoryTreeRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\ProductSearchRequest;
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$categories = $client->categories()->get(new CategoryTreeRequest(parentId: 12));
+$products = $client->productSearch()->search(new ProductSearchRequest(keyword: 'گوشی'));
+```
+
+برای فیلتر محصولات فروشنده، پیش‌نویس‌ها، جزئیات محصول، درخواست برند و آپلود، از DTO اختصاصی هر endpoint استفاده کنید. در آپلود فایل، یک stream بازشده و نام فایل را به `UploadImageRequest` بدهید؛ کلاینت multipart را ارسال می‌کند و boundary را دستی تنظیم نمی‌کند.
+
 
 ## پوشش فعلی endpointها
 
-| endpoint | متد | DTO درخواست | DTO پاسخ |
-| --- | --- | --- | --- |
-| `GET /open-api/v1/` | `healthCheck()->get()` | `HealthCheckRequest` | `HealthCheckResponse` |
-| `POST /open-api/v1/auth/refresh-token` | `refreshToken()->refresh()` | `RefreshTokenRequest` | `RefreshTokenResponse` ← `RefreshTokenData` ← `TokenExpiry` |
+این نسخه عملیات تعریف‌شده در گزیده‌ی پیوست‌شده را برای سلامت و احراز هویت، دسته‌بندی، جست‌وجوی محصول، ایجاد و ویرایش محصول، پیش‌نویس‌ها، فهرست محصولات فروشنده، انتشار، آپلود تصویر و درخواست برند پوشش می‌دهد. برای امضاهای دقیق، کلاس‌های endpoint در `src/Endpoint/` و DTOها در `src/Dto/` را ببینید.
 
-مستند OpenAPI پیوست‌شده ۲۷۵ عملیات را فهرست می‌کند. در این مرحله فقط همین دو endpoint پیاده‌سازی شده‌اند و سایر endpointها هنوز پوشش داده نشده‌اند.
+گزیده‌ی ارسالی ناقص است: ۲۷۵ عملیات را نام می‌برد، اما مسیر، schema و شکل پاسخ همه‌ی آن‌ها را ارائه نمی‌کند. این نسخه فقط مسیرهایی را پیاده‌سازی می‌کند که در متن ارسالی صریحاً تعریف شده‌اند و ادعای پوشش کامل ۲۷۵ عملیات را ندارد. پاسخ‌هایی که schema ناقص دارند در `ApiResponse` بدون حدس‌زدن فیلدها حفظ می‌شوند.
 
 ## مجوز
 
