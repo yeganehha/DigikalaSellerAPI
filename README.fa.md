@@ -72,13 +72,33 @@ $products = $client->productSearch()->search(new ProductSearchRequest(keyword: '
 
 برای فیلتر محصولات فروشنده، پیش‌نویس‌ها، جزئیات محصول، درخواست برند و آپلود، از DTO اختصاصی هر endpoint استفاده کنید. در آپلود فایل، یک stream بازشده و نام فایل را به `UploadImageRequest` بدهید؛ کلاینت multipart را ارسال می‌کند و boundary را دستی تنظیم نمی‌کند.
 
+## مدیریت واریانت‌ها
 
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\ProductVariantListRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\VariantStockRequest;
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$variants = $client->productVariants()->list(new ProductVariantListRequest(
+    page: 1,
+    size: 50,
+    filters: ['active' => true, 'shipping_type' => 'digikala'],
+));
+$variant = $client->productVariantDetails()->get(12345);
+$stock = $client->productVariantStockUpdate()->update(12345, new VariantStockRequest(10));
+```
+
+فهرست و جزئیات واریانت از `ProductVariantDto` مشترک استفاده می‌کنند؛ فراداده‌ی صفحه‌بندی مانند `pager` و `sort_data` نیز در `ApiResponse` حفظ می‌شود. عملیات Variant و Variant Creation تعریف‌شده در گزیده‌ی OpenAPI، هرکدام endpoint class و DTO درخواست مستقل دارند.
+
+
+
+برای اجرای نمونه‌ی فقط‌خواندنی واریانت، پس از تنظیم `DIGIKALA_ACCESS_TOKEN` دستور `php examples/variant-list.php` را اجرا کنید.
 ## پوشش فعلی endpointها
 
-این نسخه عملیات تعریف‌شده در گزیده‌ی پیوست‌شده را برای سلامت و احراز هویت، دسته‌بندی، جست‌وجوی محصول، ایجاد و ویرایش محصول، پیش‌نویس‌ها، فهرست محصولات فروشنده، انتشار، آپلود تصویر و درخواست برند پوشش می‌دهد. برای امضاهای دقیق، کلاس‌های endpoint در `src/Endpoint/` و DTOها در `src/Dto/` را ببینید.
+این پروژه مسیرهای Health-check، Refresh Token، دسته‌بندی و Product را که کلاس endpoint آن‌ها در `src/Endpoint/` وجود دارد، همراه با تمام ۲۶ عملیات مستندشده‌ی Product Variant و Variant Creation در گزیده‌ی پیوست پیاده‌سازی می‌کند. DTOهای درخواست و پاسخ در `src/Dto/` هستند؛ پاسخ‌های دارای schema واریانت در فهرست، جزئیات، ایجاد و ویرایش از `ProductVariantDto` مشترک استفاده می‌کنند.
 
-گزیده‌ی ارسالی ناقص است: ۲۷۵ عملیات را نام می‌برد، اما مسیر، schema و شکل پاسخ همه‌ی آن‌ها را ارائه نمی‌کند. این نسخه فقط مسیرهایی را پیاده‌سازی می‌کند که در متن ارسالی صریحاً تعریف شده‌اند و ادعای پوشش کامل ۲۷۵ عملیات را ندارد. پاسخ‌هایی که schema ناقص دارند در `ApiResponse` بدون حدس‌زدن فیلدها حفظ می‌شوند.
-
+گزیده‌ی OpenAPI ناقص است: ۲۷۵ عملیات را نام می‌برد، اما مسیر، schema درخواست و شکل پاسخ همه‌ی آن‌ها را ارائه نمی‌کند. بنابراین این کتابخانه ادعای پوشش کامل ۲۷۵ API را ندارد و جزئیات operationهای غایب از متن پیوست را حدس نمی‌زند.
 ## مجوز
 
 MIT؛ جزئیات در فایل [LICENSE](LICENSE) است.

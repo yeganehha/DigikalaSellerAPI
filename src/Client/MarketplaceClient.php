@@ -38,6 +38,34 @@ use GuzzleHttp\Client;
 use InvalidArgumentException;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Product\ProductAssignApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Product\ProductCreationAssignApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantUpdateApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantB2bActivationApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantExportApi;
+
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantPriceCalculatorApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantActivationApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantArchiveApi;
+
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantSellingPriceApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantCreationConfigApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantCreationSaveApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantCreationEditApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantProductImagesApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantModerationImagesApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantImageRejectionReasonsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantSizeTypesApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantSizeRequestApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantColorRequestApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantWarrantyRequestApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\VariantThemeValuesApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantDetailsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantGoldDetailsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantGoldUpdateApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantStockDetailsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantStockUpdateApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantB2bPricesDetailsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantB2bPricesUpdateApi;
 
 final class MarketplaceClient
 {
@@ -216,6 +244,136 @@ final class MarketplaceClient
     public function productImageAi(): ProductImageAiApi
     {
         return new ProductImageAiApi($this);
+    }
+    public function productVariantDetails(): ProductVariantDetailsApi
+    {
+        return new ProductVariantDetailsApi($this);
+    }
+
+    public function productVariants(): ProductVariantsApi
+    {
+        return new ProductVariantsApi($this);
+    }
+
+
+    public function productVariantUpdate(): ProductVariantUpdateApi
+    {
+        return new ProductVariantUpdateApi($this);
+    }
+
+    public function productVariantB2bActivation(): ProductVariantB2bActivationApi
+    {
+        return new ProductVariantB2bActivationApi($this);
+    }
+
+    public function productVariantExport(): ProductVariantExportApi
+    {
+        return new ProductVariantExportApi($this);
+    }
+
+    public function productVariantGoldDetails(): ProductVariantGoldDetailsApi
+    {
+        return new ProductVariantGoldDetailsApi($this);
+    }
+
+    public function productVariantGoldUpdate(): ProductVariantGoldUpdateApi
+    {
+        return new ProductVariantGoldUpdateApi($this);
+    }
+
+    public function productVariantPriceCalculator(): ProductVariantPriceCalculatorApi
+    {
+        return new ProductVariantPriceCalculatorApi($this);
+    }
+
+    public function productVariantActivation(): ProductVariantActivationApi
+    {
+        return new ProductVariantActivationApi($this);
+    }
+
+    public function productVariantArchive(): ProductVariantArchiveApi
+    {
+        return new ProductVariantArchiveApi($this);
+    }
+
+    public function productVariantStockDetails(): ProductVariantStockDetailsApi
+    {
+        return new ProductVariantStockDetailsApi($this);
+    }
+
+    public function productVariantStockUpdate(): ProductVariantStockUpdateApi
+    {
+        return new ProductVariantStockUpdateApi($this);
+    }
+
+    public function productVariantSellingPrice(): ProductVariantSellingPriceApi
+    {
+        return new ProductVariantSellingPriceApi($this);
+    }
+
+    public function productVariantB2bPricesDetails(): ProductVariantB2bPricesDetailsApi
+    {
+        return new ProductVariantB2bPricesDetailsApi($this);
+    }
+
+    public function productVariantB2bPricesUpdate(): ProductVariantB2bPricesUpdateApi
+    {
+        return new ProductVariantB2bPricesUpdateApi($this);
+    }
+
+    public function variantCreationConfig(): VariantCreationConfigApi
+    {
+        return new VariantCreationConfigApi($this);
+    }
+
+    public function variantCreationSave(): VariantCreationSaveApi
+    {
+        return new VariantCreationSaveApi($this);
+    }
+
+    public function variantCreationEdit(): VariantCreationEditApi
+    {
+        return new VariantCreationEditApi($this);
+    }
+
+    public function variantProductImages(): VariantProductImagesApi
+    {
+        return new VariantProductImagesApi($this);
+    }
+
+    public function variantModerationImages(): VariantModerationImagesApi
+    {
+        return new VariantModerationImagesApi($this);
+    }
+
+    public function variantImageRejectionReasons(): VariantImageRejectionReasonsApi
+    {
+        return new VariantImageRejectionReasonsApi($this);
+    }
+
+    public function variantSizeTypes(): VariantSizeTypesApi
+    {
+        return new VariantSizeTypesApi($this);
+    }
+
+    public function variantSizeRequest(): VariantSizeRequestApi
+    {
+        return new VariantSizeRequestApi($this);
+    }
+
+    public function variantColorRequest(): VariantColorRequestApi
+    {
+        return new VariantColorRequestApi($this);
+    }
+
+    public function variantWarrantyRequest(): VariantWarrantyRequestApi
+    {
+        return new VariantWarrantyRequestApi($this);
+    }
+
+    public function variantThemeValues(): VariantThemeValuesApi
+    {
+        return new VariantThemeValuesApi($this);
     }
 
     /**

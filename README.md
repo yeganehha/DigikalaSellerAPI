@@ -83,13 +83,32 @@ $products = $client->productSearch()->search(new ProductSearchRequest(keyword: '
 
 Use the endpoint-specific DTOs for seller-product filters, draft filters, product details, brand requests, and uploads. For file uploads, pass an opened stream and its filename to `UploadImageRequest`; the client sends multipart form data and does not set the multipart boundary manually.
 
+## Product variants
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\ProductVariantListRequest;
+
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$variants = $client->productVariants()->list(new ProductVariantListRequest(
+    page: 1,
+    size: 50,
+    filters: ['active' => true, 'shipping_type' => 'digikala'],
+));
+$variant = $client->productVariantDetails()->get(12345);
+```
+
+Variant list, detail, creation, and edit responses that represent a variant share `ProductVariantDto`; list metadata such as `pager` and `sort_data` remains available through `ApiResponse`. Responses without a complete variant schema, including activation responses, are preserved in `ApiResponse`. Each documented Variant and Variant Creation operation has its own endpoint class and request DTO.
+
+Run the read-only variant example with `php examples/variant-list.php` after setting `DIGIKALA_ACCESS_TOKEN`.
+
 
 ## Current endpoint coverage
 
-The current implementation covers the operations described in the supplied excerpt for health and authentication, category discovery, product search and creation, drafts, seller products, product editing, publishing, image uploads, and brand requests. See the endpoint classes under `src/Endpoint/` and request/response DTOs under `src/Dto/` for the exact method signatures.
+The project includes the health-check, refresh-token, category, and product routes explicitly represented by endpoint classes in `src/Endpoint/`. It also implements all 26 documented Product Variant and Variant Creation operations in the supplied excerpt. Request DTOs and shared response DTOs are in `src/Dto/`; variant list, detail, creation, and edit responses that have a variant schema use the shared `ProductVariantDto`.
 
-The supplied excerpt is partial: it names 275 operations, but does not include every operation's path, schema, or response shape. This release implements only the routes explicitly described in the excerpt and does not claim full coverage of all 275 operations. Incomplete response schemas are preserved in `ApiResponse` rather than guessed.
-
+The supplied OpenAPI excerpt is partial: it names 275 operations, but does not include every operation's path, request schema, or response shape. This package therefore does not claim complete coverage of all 275 operations. Operations without a complete schema in the supplied excerpt are not inferred.
 ## License
 
 MIT. See [LICENSE](LICENSE).
