@@ -1,130 +1,154 @@
-# کتابخانهٔ PHP برای Digikala Open API
+# کتابخانه‌ی PHP برای API بازارگاه دیجی‌کالا
 
-[English documentation](README.md) · [مرجع فنی API](docs/api.md) · [راهنمای وب‌هوک](docs/webhooks.md)
+یک کلاینت PHP تایپ‌شده برای Open API بازارگاه دیجی‌کالا. این مخزن در حال حاضر endpoint بررسی سلامت، نوسازی توکن، کشف دسته‌بندی، جست‌وجوی محصول و گردش‌کارهای فروشنده و محصول را که در گزیده‌ی پیوست‌شده آمده‌اند پیاده‌سازی می‌کند. هر operation پیاده‌سازی‌شده کلاس endpoint مستقل دارد و هرجا schema ورودی در مستند مشخص بوده، DTO درخواست استفاده شده است. پاسخ‌هایی که schema کامل ندارند بدون حدس‌زدن فیلدها از طریق `ApiResponse` در دسترس هستند.
 
-این پکیج مستقل و غیررسمی، تمام عملیات HTTP تعریف‌شده در فایل `digikala-open-api-document.yml` را از طریق کلاینت مبتنی بر مستندات در دسترس قرار می‌دهد. وابسته یا مورد تأیید دیجی‌کالا نیست.
+## پیش‌نیازها
 
-## پیش‌نیازها و نصب
+- PHP نسخه‌ی 8.1 یا جدیدتر
+- Composer
 
-- PHP نسخهٔ ۸٫۳ به بالا در شاخهٔ ۸، افزونهٔ JSON و Composer 2؛ افزونهٔ cURL برای انتقال HTTP توصیه می‌شود.
-- برنامهٔ فعال ثبت‌شده نزد دیجی‌کالا و دسترسی فروشنده برای استفاده از محیط واقعی.
-- نام پیشنهادی پکیج: `yeganehha/digikala-seller-open-api`؛ این مخزن به‌تنهایی به معنی انتشار در Packagist نیست.
-
-در همین مخزن:
-
-```bash
-composer install
-```
-
-فقط پس از انتشار عمومی:
+## نصب
 
 ```bash
 composer require yeganehha/digikala-seller-open-api
 ```
 
-مجوز فعلی MIT و نام صاحب اثر حفظ شده‌اند. پیش از انتشار، حق بازتوزیع مستندات API را نیز بررسی کنید.
-
-## پوشش تمام APIها
-
-مسیرها از فایل YAML خوانده می‌شوند و فهرست دستی ندارند. بنابراین تمام متدهای تعریف‌شده برای هر مسیر، حتی متدهای متفاوت روی یک مسیر، قابل استفاده‌اند. ابزار زیر تعداد واقعی را از مستندات استخراج می‌کند؛ عدد ۲۷۵ موجود در توضیحات مستندات، مبنای قطعی نیست.
-
-```bash
-composer api:list
-composer api:reference > docs/operations.md
-```
-
-شناسهٔ پیش‌فرض هر عملیات از متد و مسیر ساخته می‌شود:
-
-- `GET /open-api/v1/variants` ← `getVariants`
-- `GET /open-api/v1/variants/{variant_id}` ← `getVariantsByVariantId`
-- `PATCH /open-api/v1/variants/{variant_id}/seller-stock` ← `patchVariantsByVariantIdSellerStock`
-
-اگر مستندات `operationId` داشته باشند، همان مقدار استفاده می‌شود. اطلاعات پارامترها، رسانهٔ درخواست، scope و schema از `document()->operations()` قابل دسترسی است. برای تمام عملیات کلاس DTO مستقل تولید نشده؛ رابط عمومی از schema خود فایل استفاده می‌کند. نوع‌های غیراستاندارد مستندات عمداً به نوع فرضی تبدیل نمی‌شوند.
+این بسته هنوز در Packagist منتشر نشده است. برای توسعه‌ی محلی، مخزن را دریافت و `composer install` را اجرا کنید.
 
 ## شروع سریع
 
 ```php
-use Yeganehha\DigikalaSellerOpenApi\Client;
-use Yeganehha\DigikalaSellerOpenApi\Configuration;
-use Yeganehha\DigikalaSellerOpenApi\RequestOptions;
+<?php
 
 require __DIR__ . '/vendor/autoload.php';
 
-$token = getenv('DK_ACCESS_TOKEN');
-if (!is_string($token) || $token === '') {
-    throw new RuntimeException('Set DK_ACCESS_TOKEN.');
-}
-$client = new Client(new Configuration(accessToken: $token));
-$response = $client->call('getVariants', new RequestOptions(
-    query: ['page' => 1, 'size' => 20, 'search[active]' => true],
-));
-$items = $response->data()['items'] ?? [];
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\HealthCheckRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\RefreshTokenRequest;
+
+$client = new MarketplaceClient();
+
+$health = $client->healthCheck()->get(new HealthCheckRequest());
+var_dump($health->payload);
+
+// برای نوسازی، access token منقضی‌شده و refresh token فعلی لازم است.
+$tokens = $client->refreshToken()->refresh(
+    new RefreshTokenRequest(
+        accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: throw new RuntimeException('متغیر DIGIKALA_ACCESS_TOKEN تنظیم نشده است.'),
+        refreshToken: getenv('DIGIKALA_REFRESH_TOKEN') ?: throw new RuntimeException('متغیر DIGIKALA_REFRESH_TOKEN تنظیم نشده است.'),
+    ),
+);
+
+// هر دو توکن دریافتی را به شکل امن ذخیره کنید؛ ممکن است refresh token تعویض شود.
+$nextAccessToken = $tokens->data->accessToken;
+$nextRefreshToken = $tokens->data->refreshToken;
 ```
 
-روش مستقیم بر اساس متد و مسیر مستندشده:
+نمونه‌ی قابل اجرا در [`examples/refresh-token.php`](examples/refresh-token.php) قرار دارد. توکن‌ها، کد مجوز و سایر اطلاعات محرمانه را در مخزن ثبت نکنید.
 
-```php
-$response = $client->request('GET', '/open-api/v1/variants/{variant_id}', new RequestOptions(
-    path: ['variant_id' => 12345],
-));
-```
+## مدیریت خطا
 
-بدنهٔ JSON در `body`، پارامترهای مسیر در `path` و فیلترها در `query` قرار می‌گیرند. نام فیلترها را عین مستندات وارد کنید. در آپلود از `multipart` و stream فایل استفاده کنید؛ نمونهٔ کامل در `examples/upload.php` است. داده‌های نمونه را پیش از اجرای درخواست تغییردهنده با اطلاعات واقعی و مجاز جایگزین کنید.
+خطای شبکه، پاسخ غیر ۲xx، JSON نامعتبر و شکل پاسخ غیرمنتظره با استثنا گزارش می‌شوند. در صورت دریافت پاسخ HTTP، مقدار `ApiException::$statusCode` شامل کد وضعیت است. خطای اعتبارسنجی DTO با `UnexpectedValueException` و ورودی نامعتبر با `InvalidArgumentException` گزارش می‌شود.
 
-## توکن و خطاها
-
-`$client->authentication()` عملیات scopes، دریافت توکن، تمدید و لغو را ارائه می‌دهد. `authorization_code` ورودی دریافت توکن باید آمادهٔ ارسال مطابق قرارداد دیجی‌کالا باشد؛ الگوریتم رمزگشایی آن در فایل موجود تعریف نشده است.
-
-توکن جدید را با `withAccessToken()` روی کلاینت جدید تنظیم کنید. هر دو توکن برگشتی را امن و اتمیک ذخیره کنید. تمدید و تکرار خودکار درخواست انجام نمی‌شود تا عملیات تغییردهنده دوبار اجرا نشود.
-
-`ApiException` شامل وضعیت HTTP، پاسخ و زمان اعلام‌شده در `Retry-After` است. `TransportException` خطای امن شبکه است. هیچ‌گاه توکن، بدنهٔ خصوصی پاسخ یا exception خام شبکه را در لاگ عمومی نگذارید. برای خطای ۴۲۹ برنامه باید محدودسازی و backoff متناسب را اعمال کند.
-
-`pages()` صفحه‌ها را به‌صورت lazy برمی‌گرداند؛ نبود `total_pages` معتبر یا رسیدن به `maxPages` پیش از پایان، خطا ایجاد می‌کند. پاسخ JSON با `json()` و پاسخ غیر JSON با `body()` یا `httpResponse()` در دسترس است.
-
-## وب‌هوک داخل فایل برنامه
-
-فایل‌های نمونه:
-
-- `examples/public/webhook.php`: نقطهٔ دریافت HTTP که کتابخانه را فراخوانی می‌کند.
-- `examples/webhook-handlers.php`: فایل ثبت هندلرها که به‌طور خودکار توسط روتر بارگذاری می‌شود.
-- `examples/subscribe.php`: درخواست اشتراک و فعال‌سازی رویدادها.
-
-فراخوانی اصلی در فایل برنامه:
-
-```php
-$receiver->serve();
-```
-
-پس از تنظیم receiver، درخواست POST خوانده می‌شود، اصالت آن بررسی می‌شود، نوع رویداد با resolver تعیین می‌شود و هندلر مربوط اجرا می‌شود. رویداد پردازش‌شده دوباره اجرا نمی‌شود؛ رویداد در حال پردازش پاسخ قابل تلاش مجدد می‌گیرد؛ خطای هندلر نیز پاسخ موفق کاذب نمی‌دهد.
-
-### محدودیت مهم قرارداد
-
-فایل موجود چهار API مدیریت اشتراک و نام انواع رویداد را تعریف می‌کند، اما schema درخواست ورودی وب‌هوک، فیلد شناسهٔ یکتای تحویل، روش امضای فرستنده و API ثبت URL دریافت‌کننده را مشخص نمی‌کند. پس کتابخانه هیچ هدر امضای دیجی‌کالا یا ساختار payload فرضی ندارد.
-
-- verifier برای احراز اصالت درخواست اجباری است؛ در نبود تأیید، درخواست رد می‌شود.
-- resolver نیز اجباری و قابل تنظیم است؛ `EventResolver::jsonFields($typeField, $idField, $namespace)` کلیدهای سطح اول و فضای نام مشتری/فروشنده را مطابق قرارداد واقعی دریافت می‌کند.
-- مثال receiver، هدر داخلی `X-Webhook-Gateway-Token` از درگاه مورد اعتماد را بررسی می‌کند. این هدر قرارداد دیجی‌کالا نیست. درگاه باید فرستندهٔ واقعی را تأیید کند، هدر ورودی را حذف و مقدار معتبر تزریق کند؛ backend نباید مستقیم قابل دسترسی باشد.
-- دامنه، HTTPS و URL عمومی دریافت‌کننده باید بیرون از کتابخانه تنظیم و به دیجی‌کالا معرفی شوند. یک فایل محلی خودکار برای فرستنده قابل کشف نیست.
-- `.env.example` خودکار بارگذاری نمی‌شود؛ متغیرهای محیطی را در سرویس یا shell تنظیم کنید.
-
-`FileIdempotencyStore` برای یک میزبان و پوشهٔ خصوصی بیرون از web root است. قفل انحصاری تا پایان هندلر نگه داشته می‌شود و با پایان پردازش یا خروج فرایند آزاد می‌شود؛ این پیاده‌سازی lease زمان‌دار ندارد. شناسه‌های موفق تا مدت نگه‌داری تنظیم‌شده تکراری شناخته می‌شوند. برای چند سرور ذخیره‌سازی مشترک اتمیک پیاده کنید. هندلرهای مالی و عملیاتی باید خودشان نیز idempotent باشند؛ اجرای «دقیقاً یک بار» تضمین نمی‌شود و پاک‌سازی فایل‌های قدیمی مسئولیت برنامه است.
-
-## تست و نمونه‌ها
+## اجرای تست‌ها
 
 ```bash
+composer install
 composer test
-composer lint
-composer format:check
-composer audit
-php examples/quickstart.php
-php examples/authentication.php
-DK_UPLOAD_FILE=/absolute/path/to/image.jpg php examples/upload.php
 ```
 
-تست پوشش عملیات، همهٔ متدها و مسیرها را از YAML دریافت و با HTTP شبیه‌سازی‌شده فراخوانی می‌کند. تست‌های دیگر خطاها، پارامترها، آپلود، وب‌هوک و جلوگیری از اجرای تکراری را بررسی می‌کنند. این تست‌ها به حساب واقعی نیاز ندارند و تأیید رفتار سرور واقعی دیجی‌کالا نیستند.
+تست‌ها از Guzzle Mock Handler استفاده می‌کنند و به سرویس production درخواست نمی‌فرستند.
+## جست‌وجوی دسته و محصول
 
-در این محیط، PHP و Composer برای اجرای تست‌ها در دسترس دستیار نیستند؛ اضافه‌شدن تست و CI به معنی اجرای موفق آن‌ها نیست. پیش از انتشار، همهٔ کنترل‌ها را اجرا و هر خطا را برطرف کنید.
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\CategoryTreeRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\ProductSearchRequest;
 
-## انتشار عمومی
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$categories = $client->categories()->get(new CategoryTreeRequest(parentId: 12));
+$products = $client->productSearch()->search(new ProductSearchRequest(keyword: 'گوشی'));
+```
 
-راهنمای [انتشار](docs/publishing.md) را دنبال کنید: تأیید نام Composer، نصب و audit وابستگی‌ها، کنترل قالب‌بندی و تست‌ها، تولید مرجع عملیات، smoke test با دسترسی مجاز، تعیین قرارداد واقعی وب‌هوک، ایجاد tag و ثبت مخزن در Packagist. فایل LICENSE را حفظ کنید و اطلاعات حساس را منتشر نکنید.
+برای فیلتر محصولات فروشنده، پیش‌نویس‌ها، جزئیات محصول، درخواست برند و آپلود، از DTO اختصاصی هر endpoint استفاده کنید. در آپلود فایل، یک stream بازشده و نام فایل را به `UploadImageRequest` بدهید؛ کلاینت multipart را ارسال می‌کند و boundary را دستی تنظیم نمی‌کند.
+
+## مدیریت واریانت‌ها
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\ProductVariantListRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\VariantStockRequest;
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$variants = $client->productVariants()->list(new ProductVariantListRequest(
+    page: 1,
+    size: 50,
+    filters: ['active' => true, 'shipping_type' => 'digikala'],
+));
+$variant = $client->productVariantDetails()->get(12345);
+$stock = $client->productVariantStockUpdate()->update(12345, new VariantStockRequest(10));
+```
+
+فهرست و جزئیات واریانت از `ProductVariantDto` مشترک استفاده می‌کنند؛ فراداده‌ی صفحه‌بندی مانند `pager` و `sort_data` نیز در `ApiResponse` حفظ می‌شود. عملیات Variant و Variant Creation تعریف‌شده در گزیده‌ی OpenAPI، هرکدام endpoint class و DTO درخواست مستقل دارند.
+
+
+
+
+## عملیات سفارش‌ها
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\OrderHistoryRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\OrderListRequest;
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$activeOrders = $client->orders()->list(new OrderListRequest(
+    searchTerm: 'کفش سفید',
+    createdToday: true,
+));
+$history = $client->orderHistory()->list(new OrderHistoryRequest(
+    orderType: 'processed',
+    shippingType: 'digikala',
+));
+$statistics = $client->orderStatistics()->get();
+```
+
+هر آیتم در فهرست سفارش‌های فعال و تاریخچه از `OrderDto` مشترک استفاده می‌کند؛ pager، sort data و metadata در `ApiResponse` حفظ می‌شود. لغو سفارش نیز با `orderCancellation()->cancel($orderItemId, new OrderCancellationRequest($reasonId, $count))` در دسترس است؛ این عملیات تغییردهنده است.
+
+نمونه‌ی فقط‌خواندنی سفارش: `php examples/order-list.php` پس از تنظیم `DIGIKALA_ACCESS_TOKEN`.
+## BuyBox، فاکتورها و امور مالی
+
+این گزیده ۲ مسیر BuyBox، چهار مسیر Invoice و ۹ مسیر Finance را مشخص می‌کند. هر مسیر endpoint class و factory جداگانه در `MarketplaceClient` دارد:
+
+- `GET /open-api/v1/pricing/buybox/price-suggestion/winning-price`
+- `GET /open-api/v1/pricing/buybox/price-suggestion/nth-rank-winning-price`
+- `GET /open-api/v1/invoices`
+- `GET /open-api/v1/invoices/{invoice_id}/details`
+- `GET /open-api/v1/invoices/{invoice_id}/items/{financial_notation_id}/{calculation_type}`
+- `POST /open-api/v1/invoices/vat`
+- `GET /open-api/v1/finance/overview/v2`
+- `GET /open-api/v1/finance/transactions`
+- `GET /open-api/v1/finance/transactions/rows`
+- `GET /open-api/v1/finance/transactions/summary`
+- `GET /open-api/v1/finance/transactions/{transaction_id}`
+- `GET /open-api/v1/finance/payouts`
+- `GET /open-api/v1/finance/payouts/{payout_id}`
+- `GET /open-api/v1/finance/seller-invoices`
+- `POST /open-api/v1/finance/transactions/export/excel`
+
+فهرست و جزئیات Invoice از `InvoiceDto` مشترک استفاده می‌کنند. DTOهای اختصاصی هر operation، query و body مستندشده را می‌سازند؛ wrapper پاسخ نیز pagination و metadata را حفظ می‌کند.
+
+```bash
+php examples/finance-read.php
+```
+
+`DIGIKALA_ACCESS_TOKEN` الزامی است. برای درخواست اختیاری Finance overview، متغیرهای `FINANCE_START_DATE` و `FINANCE_END_DATE` را تنظیم کنید؛ برای BuyBox، `BUYBOX_PRODUCT_VARIANT_ID` را بدهید. نمونه فقط GET اجرا می‌کند و VAT یا Excel export را فراخوانی نمی‌کند.
+
+برای اجرای نمونه‌ی فقط‌خواندنی واریانت، پس از تنظیم `DIGIKALA_ACCESS_TOKEN` دستور `php examples/variant-list.php` را اجرا کنید.
+## پوشش فعلی endpointها
+این کتابخانه مسیرهای Health-check، Refresh Token، دسته‌بندی و Product دارای endpoint class را، به‌علاوه‌ی چهار Order operation، پانزده operation مربوط به BuyBox/Invoice/Finance و ۲۶ operation Variant/Variant Creation که در گزیده مسیر و schema آن‌ها آمده است، پیاده‌سازی می‌کند. فهرست و تاریخچه‌ی سفارش از `OrderDto` مشترک استفاده می‌کنند و فهرست و جزئیات invoice نیز `InvoiceDto` مشترک دارند.
+
+گزیده‌ی OpenAPI ناقص است: ۲۷۵ عملیات را نام می‌برد، اما مسیر، schema درخواست و شکل پاسخ همه‌ی آن‌ها را ارائه نمی‌کند. بنابراین این کتابخانه ادعای پوشش کامل ۲۷۵ API را ندارد و جزئیات operationهای غایب از متن پیوست را حدس نمی‌زند.
+## مجوز
+
+MIT؛ جزئیات در فایل [LICENSE](LICENSE) است.

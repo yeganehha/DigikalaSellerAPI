@@ -1,133 +1,166 @@
-# Digikala Open API for PHP
+# Digikala Marketplace API Client
 
-An **unofficial**, MIT-licensed Composer SDK for the Digikala Seller Marketplace Open API. Every HTTP operation in the bundled `digikala-open-api-document.yml` is callable through one document-backed client. No route allowlist is maintained by hand.
-
-[راهنمای فارسی](README.fa.md) · [API usage](docs/api.md) · [Webhooks](docs/webhooks.md) · [Releasing](docs/publishing.md)
+A typed PHP client for the Digikala Marketplace Open API. This repository currently implements health-check, refresh-token, category discovery, product search and seller-product workflows described in the attached OpenAPI excerpt. Each implemented operation has a dedicated endpoint class; request DTOs are used where the documented input schema is available. Responses with incomplete schemas remain available through `ApiResponse` without invented fields.
 
 ## Requirements
 
-- PHP **8.3+**, Composer 2 and the JSON extension.
-- An active Digikala client and seller permissions for production calls.
-- HTTPS connectivity to the seller API. Sandbox access is separately configured; no undocumented sandbox URL is assumed.
-
-Runtime dependencies: Guzzle 7 (HTTP/PSR-7, MIT) and Symfony YAML 7.4 (parsing, MIT). Development dependencies: PHPUnit 12 (BSD-3-Clause) and PHP-CS-Fixer 3 (MIT). No framework is required.
+- PHP 8.1 or newer
+- Composer
 
 ## Installation
 
-After this repository has been published on Packagist:
-
-```sh
+```bash
 composer require yeganehha/digikala-seller-open-api
 ```
 
-Before publication, clone this repository and run `composer install`, or use a Composer `path`/VCS repository in the consuming application's configuration. The package name is metadata, not a claim that a Packagist listing already exists.
+The package is not published yet. For local development, clone this repository and run `composer install`.
 
 ## Quick start
 
 ```php
-use Yeganehha\DigikalaSellerOpenApi\Client;
-use Yeganehha\DigikalaSellerOpenApi\Configuration;
-use Yeganehha\DigikalaSellerOpenApi\RequestOptions;
+<?php
 
-$token = getenv('DK_ACCESS_TOKEN');
-if (!is_string($token) || $token === '') {
-    throw new RuntimeException('DK_ACCESS_TOKEN is required.');
-}
+require __DIR__ . '/vendor/autoload.php';
 
-$client = new Client(new Configuration(accessToken: $token));
-$result = $client->call('getVariants', new RequestOptions(
-    query: ['page' => 1, 'size' => 50, 'search[active]' => true],
-));
-$items = $result->data()['items'] ?? [];
-```
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\HealthCheckRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\RefreshTokenRequest;
 
-Load Composer's `vendor/autoload.php` in the application's entry point. The default production origin matches the bundled server configuration: `https://seller.digikala.com`.
+$client = new MarketplaceClient();
 
-### Every documented API
+$health = $client->healthCheck()->get(new HealthCheckRequest());
+var_dump($health->payload);
 
-Use a document operation ID, or an exact HTTP method and path template:
-
-```php
-$result = $client->request('PATCH', '/open-api/v1/variants/{variant_id}/seller-stock',
-    new RequestOptions(path: ['variant_id' => 12345], body: ['seller_stock' => 10]),
+// Refresh-token calls require the expired access token and the current refresh token.
+$tokens = $client->refreshToken()->refresh(
+    new RefreshTokenRequest(
+        accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: throw new RuntimeException('Set DIGIKALA_ACCESS_TOKEN.'),
+        refreshToken: getenv('DIGIKALA_REFRESH_TOKEN') ?: throw new RuntimeException('Set DIGIKALA_REFRESH_TOKEN.'),
+    ),
 );
+
+// Persist both returned tokens securely; the API may rotate the refresh token.
+$nextAccessToken = $tokens->data->accessToken;
+$nextRefreshToken = $tokens->data->refreshToken;
 ```
 
-This example changes stock; use an actual variant owned by the authorized seller. The same API works for GET, POST, PUT, PATCH, DELETE, multipart uploads and non-JSON responses. Path values are encoded, and nested/flat query filters are supported.
+A runnable sample is available at [`examples/refresh-token.php`](examples/refresh-token.php). Never commit access tokens, refresh tokens, authorization codes, or other credentials.
 
-List the actual operations and their parameters:
+## Error handling
 
-```sh
-composer api:list
-php bin/api-reference.php --markdown > docs/api-reference.md
-```
-
-The supplied description declares 275 operations. The contract test independently enumerates every source method/path, compares that set with the SDK registry, checks unique IDs and sends each operation through a fake transport. The declared count is not assumed to be authoritative; inspect the generated catalogue before stating a verified release count.
-
-### Tokens and subscriptions
+Network failures, non-2xx responses, invalid JSON, and unexpected response shapes raise exceptions. `ApiException::$statusCode` contains the HTTP status when a response was received. DTO validation errors raise `UnexpectedValueException`; invalid request inputs raise `InvalidArgumentException`.
 
 ```php
-$tokens = $client->authentication()->exchange($decryptedAuthorizationCode)->data();
-$authorized = $client->withAccessToken($tokens['access_token']);
+use Yeganehha\DigikalaSellerOpenApi\Exception\ApiException;
 
-$renewed = $authorized->authentication()->refresh(
-    $tokens['access_token'], $tokens['refresh_token'],
-)->data();
-
-$authorized->webhooks()->subscribe(['product_variant_status_change']);
-$authorized->webhooks()->activate(true);
+try {
+    $health = $client->healthCheck()->get(new HealthCheckRequest());
+} catch (ApiException $exception) {
+    // Log safe diagnostic information; do not log credentials or response bodies.
+    error_log('Marketplace API failed; HTTP status: ' . ($exception->statusCode ?? 'no response'));
+}
 ```
 
-The document requires a **decrypted** authorization code but does not specify its encryption algorithm or a complete authorization redirect flow. Obtain those details from your registered client's integration agreement. Do not guess cryptography. Store replacement refresh tokens atomically and securely; the SDK neither stores tokens nor automatically replays a failed write request.
+## Tests
 
-## Webhook integration
-
-Call `Receiver::serve()` inside an application's publicly routed PHP file. Load a local handler-registration file with `Router::fromFile()`. The receiver automatically authenticates each incoming request, resolves its event, dispatches the matching handlers and handles duplicates when a store is configured.
-
-See [the complete example](examples/public/webhook.php) and [the webhook guide](docs/webhooks.md). Important boundaries:
-
-- The bundled document defines subscription APIs and allowed event names, **not** the incoming envelope, signature protocol or callback-URL registration API.
-- A sender verifier and event resolver are mandatory. Their contract must match your verified delivery configuration.
-- The example requires a trusted gateway; `X-Webhook-Gateway-Token` is an **application-specific example**, not a Digikala header.
-- Including a PHP file cannot make Digikala discover its public URL. Configure that URL with Digikala separately.
-- No handler is loaded implicitly during Composer autoload, and no application directory is scanned or executed.
-
-## Errors and reliability
-
-`ApiException` exposes HTTP status, validation errors, the response and `Retry-After`; exception messages do not include tokens, URLs or response bodies. `TransportException` reports a transport failure without retaining a credential-bearing Guzzle exception. A response with `status: error` is treated as a failure even with HTTP 200.
-
-TLS verification is enabled, redirects and automatic retries are disabled, and positive request/connect timeouts are enforced. Follow the service's rate limits. Retrying mutations requires application-level reconciliation/idempotency. Large/binary responses remain available as PSR-7 responses rather than being forcibly decoded.
-
-## Samples
-
-```sh
-php examples/quickstart.php
-DK_UPLOAD_FILE=/absolute/path/to/product-image.jpg php examples/upload.php
-php examples/authentication.php
-DK_WEBHOOK_EVENTS=product_variant_status_change php examples/subscribe.php
-```
-
-Configure the variables listed in `.env.example` in your environment. This library does not automatically load dotenv files. Authentication samples never print credentials. Subscription samples change seller subscriptions.
-
-## Development and tests
-
-```sh
+```bash
 composer install
-composer validate --strict
-composer lint
 composer test
-composer format:check
-composer audit
 ```
 
-`composer format` applies formatting. Tests use Guzzle MockHandler and temporary local storage, never production. CI runs PHP 8.3, 8.4 and 8.5, checks low and normal dependency resolutions, tests, syntax, style and a Composer security audit.
+Tests use Guzzle's mock handler and do not call the production service.
+## Category and product search
 
-Generated API coverage does not prove live-server interoperability or request/response semantics. Incoming webhook compatibility must be verified against a real agreed payload before deployment. Checks must be run successfully in your PHP environment before release; creating test files does not mean they have been executed.
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\CategoryTreeRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\ProductSearchRequest;
 
-## Support and contribution
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$categories = $client->categories()->get(new CategoryTreeRequest(parentId: 12));
+$products = $client->productSearch()->search(new ProductSearchRequest(keyword: 'گوشی'));
+```
 
-See [CONTRIBUTING](CONTRIBUTING.md), [SECURITY](SECURITY.md) and [release instructions](docs/publishing.md). Use the repository's private security-reporting channel for vulnerabilities; do not include tokens or seller data in public issues. This SDK is not endorsed by Digikala.
+Use the endpoint-specific DTOs for seller-product filters, draft filters, product details, brand requests, and uploads. For file uploads, pass an opened stream and its filename to `UploadImageRequest`; the client sends multipart form data and does not set the multipart boundary manually.
 
+## Product variants
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\ProductVariantListRequest;
+
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$variants = $client->productVariants()->list(new ProductVariantListRequest(
+    page: 1,
+    size: 50,
+    filters: ['active' => true, 'shipping_type' => 'digikala'],
+));
+$variant = $client->productVariantDetails()->get(12345);
+```
+
+Variant list, detail, creation, and edit responses that represent a variant share `ProductVariantDto`; list metadata such as `pager` and `sort_data` remains available through `ApiResponse`. Responses without a complete variant schema, including activation responses, are preserved in `ApiResponse`. Each documented Variant and Variant Creation operation has its own endpoint class and request DTO.
+
+Run the read-only variant example with `php examples/variant-list.php` after setting `DIGIKALA_ACCESS_TOKEN`.
+
+
+
+## Orders
+The documented order operations are exposed as separate endpoint classes: active orders, order statistics, order history, and order-item cancellation. Active-order and history items share `OrderDto`; pagination, sorting, and response metadata remain available through `ApiResponse`.
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\OrderHistoryRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\OrderListRequest;
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$activeOrders = $client->orders()->list(new OrderListRequest(
+    searchTerm: 'کفش سفید',
+    createdToday: true,
+));
+$history = $client->orderHistory()->list(new OrderHistoryRequest(
+    orderType: 'processed',
+    shippingType: 'digikala',
+));
+$statistics = $client->orderStatistics()->get();
+```
+
+Run the read-only sample with `php examples/order-list.php` after setting `DIGIKALA_ACCESS_TOKEN`. Order cancellation is a destructive operation; call `orderCancellation()->cancel()` only after confirming the order-item ID and cancellation reason.
+
+
+## BuyBox, invoices, and finance
+
+The supplied excerpt includes 2 BuyBox, 4 Invoice, and 9 Finance paths. Each is exposed through its own endpoint class and `MarketplaceClient` factory:
+
+- `GET /open-api/v1/pricing/buybox/price-suggestion/winning-price`
+- `GET /open-api/v1/pricing/buybox/price-suggestion/nth-rank-winning-price`
+- `GET /open-api/v1/invoices`
+- `GET /open-api/v1/invoices/{invoice_id}/details`
+- `GET /open-api/v1/invoices/{invoice_id}/items/{financial_notation_id}/{calculation_type}`
+- `POST /open-api/v1/invoices/vat`
+- `GET /open-api/v1/finance/overview/v2`
+- `GET /open-api/v1/finance/transactions`
+- `GET /open-api/v1/finance/transactions/rows`
+- `GET /open-api/v1/finance/transactions/summary`
+- `GET /open-api/v1/finance/transactions/{transaction_id}`
+- `GET /open-api/v1/finance/payouts`
+- `GET /open-api/v1/finance/payouts/{payout_id}`
+- `GET /open-api/v1/finance/seller-invoices`
+- `POST /open-api/v1/finance/transactions/export/excel`
+
+Invoice list and detail share `InvoiceDto`. Finance list items have dedicated DTOs; `ApiResponse` retains pagination and metadata. Run the read-only example with the required environment variables set:
+
+```bash
+php examples/finance-read.php
+```
+
+`DIGIKALA_ACCESS_TOKEN` is required. `FINANCE_START_DATE` and `FINANCE_END_DATE` enable the optional overview request; `BUYBOX_PRODUCT_VARIANT_ID` enables the optional BuyBox suggestion request. Excel export and VAT calculation are not called by the sample.
+
+## Current endpoint coverage
+
+The documented coverage in this repository includes 4 Order operations, 26 Product Variant and Variant Creation operations, and 15 BuyBox, Invoice, and Finance operations, in addition to the other routes represented by endpoint classes under `src/Endpoint/`. Active-order and order-history items share `OrderDto`; invoice list and detail share `InvoiceDto`; list metadata is retained in `ApiResponse`.
+
+The supplied OpenAPI excerpt is partial: it names 275 operations, but does not include every operation's path, request schema, or response shape. This package therefore does not claim complete coverage of all 275 operations. Operations without a complete schema in the supplied excerpt are not inferred.
 ## License
 
-[MIT](LICENSE), copyright (c) 2026 Erfan Ebrahimi. The original document and license are preserved. Confirm that you have redistribution rights for the supplied API document before a public release; this SDK does not grant rights to Digikala trademarks or access to its services.
+MIT. See [LICENSE](LICENSE).
