@@ -116,12 +116,37 @@ $statistics = $client->orderStatistics()->get();
 هر آیتم در فهرست سفارش‌های فعال و تاریخچه از `OrderDto` مشترک استفاده می‌کند؛ pager، sort data و metadata در `ApiResponse` حفظ می‌شود. لغو سفارش نیز با `orderCancellation()->cancel($orderItemId, new OrderCancellationRequest($reasonId, $count))` در دسترس است؛ این عملیات تغییردهنده است.
 
 نمونه‌ی فقط‌خواندنی سفارش: `php examples/order-list.php` پس از تنظیم `DIGIKALA_ACCESS_TOKEN`.
+## BuyBox، فاکتورها و امور مالی
 
-در متن پیوست، schema کامل فقط برای ۴ operation گروه Order ارائه شده است. پوشش کلی کتابخانه شامل این ۴ operation سفارش و ۲۶ operation Variant/Variant Creation مستندشده است؛ از متن ناقص نمی‌توان ادعای پیاده‌سازی تمام ۲۷۵ operation را کرد.
+این گزیده ۲ مسیر BuyBox، چهار مسیر Invoice و ۹ مسیر Finance را مشخص می‌کند. هر مسیر endpoint class و factory جداگانه در `MarketplaceClient` دارد:
+
+- `GET /open-api/v1/pricing/buybox/price-suggestion/winning-price`
+- `GET /open-api/v1/pricing/buybox/price-suggestion/nth-rank-winning-price`
+- `GET /open-api/v1/invoices`
+- `GET /open-api/v1/invoices/{invoice_id}/details`
+- `GET /open-api/v1/invoices/{invoice_id}/items/{financial_notation_id}/{calculation_type}`
+- `POST /open-api/v1/invoices/vat`
+- `GET /open-api/v1/finance/overview/v2`
+- `GET /open-api/v1/finance/transactions`
+- `GET /open-api/v1/finance/transactions/rows`
+- `GET /open-api/v1/finance/transactions/summary`
+- `GET /open-api/v1/finance/transactions/{transaction_id}`
+- `GET /open-api/v1/finance/payouts`
+- `GET /open-api/v1/finance/payouts/{payout_id}`
+- `GET /open-api/v1/finance/seller-invoices`
+- `POST /open-api/v1/finance/transactions/export/excel`
+
+فهرست و جزئیات Invoice از `InvoiceDto` مشترک استفاده می‌کنند. DTOهای اختصاصی هر operation، query و body مستندشده را می‌سازند؛ wrapper پاسخ نیز pagination و metadata را حفظ می‌کند.
+
+```bash
+php examples/finance-read.php
+```
+
+`DIGIKALA_ACCESS_TOKEN` الزامی است. برای درخواست اختیاری Finance overview، متغیرهای `FINANCE_START_DATE` و `FINANCE_END_DATE` را تنظیم کنید؛ برای BuyBox، `BUYBOX_PRODUCT_VARIANT_ID` را بدهید. نمونه فقط GET اجرا می‌کند و VAT یا Excel export را فراخوانی نمی‌کند.
+
 برای اجرای نمونه‌ی فقط‌خواندنی واریانت، پس از تنظیم `DIGIKALA_ACCESS_TOKEN` دستور `php examples/variant-list.php` را اجرا کنید.
 ## پوشش فعلی endpointها
-این پروژه مسیرهای Health-check، Refresh Token، دسته‌بندی و Product را که کلاس endpoint آن‌ها در `src/Endpoint/` وجود دارد، همراه با چهار operation سفارش و ۲۶ operation Product Variant/Variant Creation که مسیر و schema آن‌ها در گزیده مستند است، پیاده‌سازی می‌کند. آیتم‌های فهرست سفارش فعال و تاریخچه از `OrderDto` مشترک استفاده می‌کنند؛ DTO واریانت نیز در پاسخ‌هایی که schema واریانت دارند مشترک است.
-این پروژه مسیرهای Health-check، Refresh Token، دسته‌بندی و Product را که کلاس endpoint آن‌ها در `src/Endpoint/` وجود دارد، همراه با تمام ۲۶ عملیات مستندشده‌ی Product Variant و Variant Creation در گزیده‌ی پیوست پیاده‌سازی می‌کند. DTOهای درخواست و پاسخ در `src/Dto/` هستند؛ پاسخ‌های دارای schema واریانت در فهرست، جزئیات، ایجاد و ویرایش از `ProductVariantDto` مشترک استفاده می‌کنند.
+این کتابخانه مسیرهای Health-check، Refresh Token، دسته‌بندی و Product دارای endpoint class را، به‌علاوه‌ی چهار Order operation، پانزده operation مربوط به BuyBox/Invoice/Finance و ۲۶ operation Variant/Variant Creation که در گزیده مسیر و schema آن‌ها آمده است، پیاده‌سازی می‌کند. فهرست و تاریخچه‌ی سفارش از `OrderDto` مشترک استفاده می‌کنند و فهرست و جزئیات invoice نیز `InvoiceDto` مشترک دارند.
 
 گزیده‌ی OpenAPI ناقص است: ۲۷۵ عملیات را نام می‌برد، اما مسیر، schema درخواست و شکل پاسخ همه‌ی آن‌ها را ارائه نمی‌کند. بنابراین این کتابخانه ادعای پوشش کامل ۲۷۵ API را ندارد و جزئیات operationهای غایب از متن پیوست را حدس نمی‌زند.
 ## مجوز

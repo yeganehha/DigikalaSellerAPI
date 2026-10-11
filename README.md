@@ -106,8 +106,7 @@ Run the read-only variant example with `php examples/variant-list.php` after set
 
 
 ## Orders
-The project includes the health-check, refresh-token, category, and product routes explicitly represented by endpoint classes in `src/Endpoint/`. It also implements the four Order operations and 26 Product Variant/Variant Creation operations whose paths and schemas are documented in the supplied excerpt. Active-order and order-history items share `OrderDto`; the Variant response DTO is shared where the schema represents a variant.
-The documented order operations are exposed as separate endpoint classes: active orders, order statistics, order history, and order-item cancellation. Active orders and history items share `OrderDto`; pagination, sorting, and response metadata remain available through `ApiResponse`.
+The documented order operations are exposed as separate endpoint classes: active orders, order statistics, order history, and order-item cancellation. Active-order and history items share `OrderDto`; pagination, sorting, and response metadata remain available through `ApiResponse`.
 
 ```php
 use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
@@ -129,9 +128,37 @@ $statistics = $client->orderStatistics()->get();
 Run the read-only sample with `php examples/order-list.php` after setting `DIGIKALA_ACCESS_TOKEN`. Order cancellation is a destructive operation; call `orderCancellation()->cancel()` only after confirming the order-item ID and cancellation reason.
 
 
+## BuyBox, invoices, and finance
+
+The supplied excerpt includes 2 BuyBox, 4 Invoice, and 9 Finance paths. Each is exposed through its own endpoint class and `MarketplaceClient` factory:
+
+- `GET /open-api/v1/pricing/buybox/price-suggestion/winning-price`
+- `GET /open-api/v1/pricing/buybox/price-suggestion/nth-rank-winning-price`
+- `GET /open-api/v1/invoices`
+- `GET /open-api/v1/invoices/{invoice_id}/details`
+- `GET /open-api/v1/invoices/{invoice_id}/items/{financial_notation_id}/{calculation_type}`
+- `POST /open-api/v1/invoices/vat`
+- `GET /open-api/v1/finance/overview/v2`
+- `GET /open-api/v1/finance/transactions`
+- `GET /open-api/v1/finance/transactions/rows`
+- `GET /open-api/v1/finance/transactions/summary`
+- `GET /open-api/v1/finance/transactions/{transaction_id}`
+- `GET /open-api/v1/finance/payouts`
+- `GET /open-api/v1/finance/payouts/{payout_id}`
+- `GET /open-api/v1/finance/seller-invoices`
+- `POST /open-api/v1/finance/transactions/export/excel`
+
+Invoice list and detail share `InvoiceDto`. Finance list items have dedicated DTOs; `ApiResponse` retains pagination and metadata. Run the read-only example with the required environment variables set:
+
+```bash
+php examples/finance-read.php
+```
+
+`DIGIKALA_ACCESS_TOKEN` is required. `FINANCE_START_DATE` and `FINANCE_END_DATE` enable the optional overview request; `BUYBOX_PRODUCT_VARIANT_ID` enables the optional BuyBox suggestion request. Excel export and VAT calculation are not called by the sample.
+
 ## Current endpoint coverage
 
-The project includes the health-check, refresh-token, category, and product routes explicitly represented by endpoint classes in `src/Endpoint/`. It also implements all 26 documented Product Variant and Variant Creation operations in the supplied excerpt. Request DTOs and shared response DTOs are in `src/Dto/`; variant list, detail, creation, and edit responses that have a variant schema use the shared `ProductVariantDto`.
+The documented coverage in this repository includes 4 Order operations, 26 Product Variant and Variant Creation operations, and 15 BuyBox, Invoice, and Finance operations, in addition to the other routes represented by endpoint classes under `src/Endpoint/`. Active-order and order-history items share `OrderDto`; invoice list and detail share `InvoiceDto`; list metadata is retained in `ApiResponse`.
 
 The supplied OpenAPI excerpt is partial: it names 275 operations, but does not include every operation's path, request schema, or response shape. This package therefore does not claim complete coverage of all 275 operations. Operations without a complete schema in the supplied excerpt are not inferred.
 ## License

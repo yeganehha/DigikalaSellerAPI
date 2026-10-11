@@ -42,6 +42,21 @@ use Yeganehha\DigikalaSellerOpenApi\Endpoint\Order\OrdersApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Order\OrderStatisticsApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Order\OrderHistoryApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Order\OrderCancellationApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\BuyBox\WinningPriceSuggestionApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\BuyBox\NthRankWinningPriceSuggestionApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Invoice\InvoicesApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Invoice\InvoiceDetailsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Invoice\InvoiceItemsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Invoice\InvoiceVatApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinanceOverviewApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinanceTransactionsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinanceTransactionRowsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinanceTransactionSummaryApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinanceTransactionDetailsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinancePayoutsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinancePayoutDetailsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinanceSellerInvoicesApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Finance\FinanceTransactionsExportApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantsApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantUpdateApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantB2bActivationApi;
@@ -397,6 +412,81 @@ final class MarketplaceClient
     public function orderCancellation(): OrderCancellationApi
     {
         return new OrderCancellationApi($this);
+    }
+
+    public function buyBoxWinningPriceSuggestion(): WinningPriceSuggestionApi
+    {
+        return new WinningPriceSuggestionApi($this);
+    }
+
+    public function buyBoxNthRankWinningPriceSuggestion(): NthRankWinningPriceSuggestionApi
+    {
+        return new NthRankWinningPriceSuggestionApi($this);
+    }
+
+    public function invoices(): InvoicesApi
+    {
+        return new InvoicesApi($this);
+    }
+
+    public function invoiceDetails(): InvoiceDetailsApi
+    {
+        return new InvoiceDetailsApi($this);
+    }
+
+    public function invoiceItems(): InvoiceItemsApi
+    {
+        return new InvoiceItemsApi($this);
+    }
+
+    public function invoiceVat(): InvoiceVatApi
+    {
+        return new InvoiceVatApi($this);
+    }
+
+    public function financeOverview(): FinanceOverviewApi
+    {
+        return new FinanceOverviewApi($this);
+    }
+
+    public function financeTransactions(): FinanceTransactionsApi
+    {
+        return new FinanceTransactionsApi($this);
+    }
+
+    public function financeTransactionRows(): FinanceTransactionRowsApi
+    {
+        return new FinanceTransactionRowsApi($this);
+    }
+
+    public function financeTransactionSummary(): FinanceTransactionSummaryApi
+    {
+        return new FinanceTransactionSummaryApi($this);
+    }
+
+    public function financeTransactionDetails(): FinanceTransactionDetailsApi
+    {
+        return new FinanceTransactionDetailsApi($this);
+    }
+
+    public function financePayouts(): FinancePayoutsApi
+    {
+        return new FinancePayoutsApi($this);
+    }
+
+    public function financePayoutDetails(): FinancePayoutDetailsApi
+    {
+        return new FinancePayoutDetailsApi($this);
+    }
+
+    public function financeSellerInvoices(): FinanceSellerInvoicesApi
+    {
+        return new FinanceSellerInvoicesApi($this);
+    }
+
+    public function financeTransactionsExport(): FinanceTransactionsExportApi
+    {
+        return new FinanceTransactionsExportApi($this);
     }
 
     /**
