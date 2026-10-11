@@ -104,6 +104,31 @@ Variant list, detail, creation, and edit responses that represent a variant shar
 Run the read-only variant example with `php examples/variant-list.php` after setting `DIGIKALA_ACCESS_TOKEN`.
 
 
+
+## Orders
+The project includes the health-check, refresh-token, category, and product routes explicitly represented by endpoint classes in `src/Endpoint/`. It also implements the four Order operations and 26 Product Variant/Variant Creation operations whose paths and schemas are documented in the supplied excerpt. Active-order and order-history items share `OrderDto`; the Variant response DTO is shared where the schema represents a variant.
+The documented order operations are exposed as separate endpoint classes: active orders, order statistics, order history, and order-item cancellation. Active orders and history items share `OrderDto`; pagination, sorting, and response metadata remain available through `ApiResponse`.
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\OrderHistoryRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\OrderListRequest;
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$activeOrders = $client->orders()->list(new OrderListRequest(
+    searchTerm: 'کفش سفید',
+    createdToday: true,
+));
+$history = $client->orderHistory()->list(new OrderHistoryRequest(
+    orderType: 'processed',
+    shippingType: 'digikala',
+));
+$statistics = $client->orderStatistics()->get();
+```
+
+Run the read-only sample with `php examples/order-list.php` after setting `DIGIKALA_ACCESS_TOKEN`. Order cancellation is a destructive operation; call `orderCancellation()->cancel()` only after confirming the order-item ID and cancellation reason.
+
+
 ## Current endpoint coverage
 
 The project includes the health-check, refresh-token, category, and product routes explicitly represented by endpoint classes in `src/Endpoint/`. It also implements all 26 documented Product Variant and Variant Creation operations in the supplied excerpt. Request DTOs and shared response DTOs are in `src/Dto/`; variant list, detail, creation, and edit responses that have a variant schema use the shared `ProductVariantDto`.

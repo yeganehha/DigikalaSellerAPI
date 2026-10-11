@@ -93,9 +93,34 @@ $stock = $client->productVariantStockUpdate()->update(12345, new VariantStockReq
 
 
 
+
+## عملیات سفارش‌ها
+
+```php
+use Yeganehha\DigikalaSellerOpenApi\Client\MarketplaceClient;
+use Yeganehha\DigikalaSellerOpenApi\Dto\OrderHistoryRequest;
+use Yeganehha\DigikalaSellerOpenApi\Dto\OrderListRequest;
+
+$client = new MarketplaceClient(accessToken: getenv('DIGIKALA_ACCESS_TOKEN') ?: null);
+$activeOrders = $client->orders()->list(new OrderListRequest(
+    searchTerm: 'کفش سفید',
+    createdToday: true,
+));
+$history = $client->orderHistory()->list(new OrderHistoryRequest(
+    orderType: 'processed',
+    shippingType: 'digikala',
+));
+$statistics = $client->orderStatistics()->get();
+```
+
+هر آیتم در فهرست سفارش‌های فعال و تاریخچه از `OrderDto` مشترک استفاده می‌کند؛ pager، sort data و metadata در `ApiResponse` حفظ می‌شود. لغو سفارش نیز با `orderCancellation()->cancel($orderItemId, new OrderCancellationRequest($reasonId, $count))` در دسترس است؛ این عملیات تغییردهنده است.
+
+نمونه‌ی فقط‌خواندنی سفارش: `php examples/order-list.php` پس از تنظیم `DIGIKALA_ACCESS_TOKEN`.
+
+در متن پیوست، schema کامل فقط برای ۴ operation گروه Order ارائه شده است. پوشش کلی کتابخانه شامل این ۴ operation سفارش و ۲۶ operation Variant/Variant Creation مستندشده است؛ از متن ناقص نمی‌توان ادعای پیاده‌سازی تمام ۲۷۵ operation را کرد.
 برای اجرای نمونه‌ی فقط‌خواندنی واریانت، پس از تنظیم `DIGIKALA_ACCESS_TOKEN` دستور `php examples/variant-list.php` را اجرا کنید.
 ## پوشش فعلی endpointها
-
+این پروژه مسیرهای Health-check، Refresh Token، دسته‌بندی و Product را که کلاس endpoint آن‌ها در `src/Endpoint/` وجود دارد، همراه با چهار operation سفارش و ۲۶ operation Product Variant/Variant Creation که مسیر و schema آن‌ها در گزیده مستند است، پیاده‌سازی می‌کند. آیتم‌های فهرست سفارش فعال و تاریخچه از `OrderDto` مشترک استفاده می‌کنند؛ DTO واریانت نیز در پاسخ‌هایی که schema واریانت دارند مشترک است.
 این پروژه مسیرهای Health-check، Refresh Token، دسته‌بندی و Product را که کلاس endpoint آن‌ها در `src/Endpoint/` وجود دارد، همراه با تمام ۲۶ عملیات مستندشده‌ی Product Variant و Variant Creation در گزیده‌ی پیوست پیاده‌سازی می‌کند. DTOهای درخواست و پاسخ در `src/Dto/` هستند؛ پاسخ‌های دارای schema واریانت در فهرست، جزئیات، ایجاد و ویرایش از `ProductVariantDto` مشترک استفاده می‌کنند.
 
 گزیده‌ی OpenAPI ناقص است: ۲۷۵ عملیات را نام می‌برد، اما مسیر، schema درخواست و شکل پاسخ همه‌ی آن‌ها را ارائه نمی‌کند. بنابراین این کتابخانه ادعای پوشش کامل ۲۷۵ API را ندارد و جزئیات operationهای غایب از متن پیوست را حدس نمی‌زند.

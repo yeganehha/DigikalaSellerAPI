@@ -38,6 +38,10 @@ use GuzzleHttp\Client;
 use InvalidArgumentException;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Product\ProductAssignApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Product\ProductCreationAssignApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Order\OrdersApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Order\OrderStatisticsApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Order\OrderHistoryApi;
+use Yeganehha\DigikalaSellerOpenApi\Endpoint\Order\OrderCancellationApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantsApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantUpdateApi;
 use Yeganehha\DigikalaSellerOpenApi\Endpoint\Variant\ProductVariantB2bActivationApi;
@@ -374,6 +378,25 @@ final class MarketplaceClient
     public function variantThemeValues(): VariantThemeValuesApi
     {
         return new VariantThemeValuesApi($this);
+    }
+    public function orders(): OrdersApi
+    {
+        return new OrdersApi($this);
+    }
+
+    public function orderStatistics(): OrderStatisticsApi
+    {
+        return new OrderStatisticsApi($this);
+    }
+
+    public function orderHistory(): OrderHistoryApi
+    {
+        return new OrderHistoryApi($this);
+    }
+
+    public function orderCancellation(): OrderCancellationApi
+    {
+        return new OrderCancellationApi($this);
     }
 
     /**
