@@ -123,7 +123,7 @@ final class VariantCreationOperationsApiTest extends TestCase
     /** @return array{MarketplaceClient, array<int, array<string, mixed>>} */
     private function clientWithHistory(): array
     {
-        $history = [];
+        $history = new \ArrayObject();
         $stack = HandlerStack::create(new MockHandler([
             new Response(200, ['Content-Type' => 'application/json'], '{"status":"ok","data":{}}'),
         ]));

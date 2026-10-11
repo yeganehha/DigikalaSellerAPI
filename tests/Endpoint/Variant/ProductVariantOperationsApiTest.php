@@ -126,7 +126,7 @@ final class ProductVariantOperationsApiTest extends TestCase
         $client->productVariantGoldUpdate()->update(123, $request);
 
         self::assertRequest($history[0]['request'], 'PUT', '/open-api/v1/variants/123/gold');
-        self::assertSame($request->toArray(), json_decode((string) $history[0]['request']->getBody(), true));
+        self::assertEquals($request->toArray(), json_decode((string) $history[0]['request']->getBody(), true));
     }
 
     public function testPriceCalculatorUsesRequiredQueryParameters(): void
@@ -170,7 +170,7 @@ final class ProductVariantOperationsApiTest extends TestCase
     /** @return array{MarketplaceClient, array<int, array<string, mixed>>} */
     private function clientWithHistory(): array
     {
-        $history = [];
+        $history = new \ArrayObject();
         $stack = HandlerStack::create(new MockHandler([
             new Response(200, ['Content-Type' => 'application/json'], '{"status":"ok","data":{}}'),
         ]));
